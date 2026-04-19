@@ -1,12 +1,34 @@
-export async function onRequestGet({ request }) {
+import { verifyAccessCode } from '../_shared/access.js';
+
+const NOTIFY_EMAIL_DEFAULT = 'tyler.perleberg@aisymmetricsolutions.com';
+const FROM_DEFAULT = 'Aegis Website <onboarding@resend.dev>';
+
+export async function onRequestGet({ request, env }) {
   const u = new URL(request.url);
   const target = u.searchParams.get('url');
+  const code = u.searchParams.get('code') || request.headers.get('x-aegis-code');
+
+  const access = await verifyAccessCode(env.ACCESS_SECRET, code);
+  if (!access.valid) {
+    const msg = {
+      missing: 'Access code required. Request one from the site to run a scan.',
+      malformed: 'That access code looks invalid.',
+      expired: 'This access code has expired. Request a new one from the site.',
+      future: 'Access code timestamp is in the future.',
+      invalid: 'Access code failed verification.',
+      'server-misconfigured': 'Access control not configured on the server.',
+    }[access.error] || 'Access denied.';
+    return json({ error: msg, reason: access.error }, 401);
+  }
 
   const v = validateTarget(target);
   if (!v.ok) return json({ error: v.error }, 400);
 
   try {
     const report = await runScan(v.url);
+    if (env.RESEND_API_KEY) {
+      logScan(env, report, access).catch(e => console.error('Scan log email failed:', e));
+    }
     return json(report);
   } catch (e) {
     console.error('Scan failed:', e);
@@ -276,4 +298,65 @@ async function dnsTxt(name) {
   const body = await resp.json();
   if (!body.Answer) return [];
   return body.Answer.map(a => (a.data || '').replace(/^"|"$/g, '').replace(/"\s*"/g, ''));
+}
+
+async function logScan(env, report, access) {
+  const from = env.RESEND_FROM || FROM_DEFAULT;
+  const to = env.NOTIFY_EMAIL || NOTIFY_EMAIL_DEFAULT;
+  const bd = report.score.breakdown;
+  const host = (() => { try { return new URL(report.scannedUrl).hostname; } catch { return report.scannedUrl; } })();
+  const issuedDay = access.issuedAt ? access.issuedAt.toISOString().slice(0, 10) : '';
+  const fails = report.categories.flatMap(c => c.checks).filter(c => c.status === 'fail').map(c => c.name);
+  const warns = report.categories.flatMap(c => c.checks).filter(c => c.status === 'warn').map(c => c.name);
+
+  const subject = `[Aegis Scan] ${host} — ${report.score.value} (${report.score.grade})`;
+  const text = [
+    `Scanned URL: ${report.scannedUrl}`,
+    `Score: ${report.score.value} (Grade ${report.score.grade})`,
+    `Breakdown: ${bd.pass} pass / ${bd.warn} warn / ${bd.fail} fail (of ${bd.total})`,
+    `Duration: ${report.durationMs}ms`,
+    `Scanned at: ${report.scannedAt}`,
+    `Access code issued: ${issuedDay}`,
+    '',
+    fails.length ? `Failed checks:\n - ${fails.join('\n - ')}` : 'No failed checks.',
+    '',
+    warns.length ? `Warnings:\n - ${warns.join('\n - ')}` : 'No warnings.',
+  ].join('\n');
+
+  const rows = [
+    ['Scanned URL', report.scannedUrl],
+    ['Score', `${report.score.value} (Grade ${report.score.grade})`],
+    ['Breakdown', `${bd.pass} pass · ${bd.warn} warn · ${bd.fail} fail`],
+    ['Duration', `${report.durationMs}ms`],
+    ['Scanned at', report.scannedAt],
+    ['Access code issued', issuedDay],
+  ].map(([k, v]) => `<tr><td style="padding:6px 14px 6px 0;color:#6B7A9A;font-size:12px;white-space:nowrap;vertical-align:top;">${escHtml(k)}</td><td style="padding:6px 0;color:#0A0C10;font-size:13px;vertical-align:top;word-break:break-all;">${escHtml(v)}</td></tr>`).join('');
+
+  const findings = (fails.length || warns.length)
+    ? `<div style="margin-top:18px;padding-top:16px;border-top:1px solid #EFECE4;">
+        ${fails.length ? `<div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#B04B4F;font-weight:700;margin-bottom:6px;">Failed</div><div style="font-size:13px;color:#0A0C10;margin-bottom:12px;">${fails.map(escHtml).join(' · ')}</div>` : ''}
+        ${warns.length ? `<div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8A6E30;font-weight:700;margin-bottom:6px;">Warnings</div><div style="font-size:13px;color:#0A0C10;">${warns.map(escHtml).join(' · ')}</div>` : ''}
+      </div>`
+    : '';
+
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#F4F2EE;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#FFFFFF;border-radius:12px;overflow:hidden;border:1px solid #EAE7E1;">
+  <tr><td style="background:#0A0C10;padding:20px 24px;">
+    <div style="color:#1A9B8C;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;">Aegis Scan Log</div>
+    <div style="color:#F4F2EE;font-size:18px;font-weight:700;margin-top:4px;">${escHtml(host)} &nbsp;·&nbsp; <span style="color:#C9A84C;">${report.score.value}</span> <span style="color:#8A96B0;font-weight:500;font-size:14px;">(Grade ${escHtml(report.score.grade)})</span></div>
+  </td></tr>
+  <tr><td style="padding:20px 24px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>${findings}</td></tr>
+  <tr><td style="padding:14px 24px;background:#F4F2EE;color:#6B7A9A;font-size:11px;">Filter inbox for <code>[Aegis Scan]</code> for your weekly review.</td></tr>
+</table></body></html>`;
+
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to: [to], subject, html, text }),
+  });
+  if (!resp.ok) throw new Error(`Resend ${resp.status}: ${await resp.text()}`);
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }

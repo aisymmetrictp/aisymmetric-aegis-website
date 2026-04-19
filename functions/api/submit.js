@@ -1,3 +1,5 @@
+import { generateAccessCode } from '../_shared/access.js';
+
 const NOTIFY_EMAIL_DEFAULT = 'tyler.perleberg@aisymmetricsolutions.com';
 const FROM_DEFAULT = 'Aegis Website <onboarding@resend.dev>';
 const TOOL_URL_DEFAULT = 'https://aisymmetricaegis.com/scan/';
@@ -27,15 +29,27 @@ export async function onRequestPost({ request, env }) {
 
   const from = env.RESEND_FROM || FROM_DEFAULT;
   const notifyTo = env.NOTIFY_EMAIL || NOTIFY_EMAIL_DEFAULT;
-  const toolUrl = env.AEGIS_TOOL_URL || TOOL_URL_DEFAULT;
+  const toolBase = env.AEGIS_TOOL_URL || TOOL_URL_DEFAULT;
+
+  let access = null;
+  if (formType === 'download') {
+    try {
+      access = await generateAccessCode(env.ACCESS_SECRET);
+    } catch (e) {
+      console.error('Access code generation failed:', e);
+      return json({ error: 'Access control is not configured. Please try again later.' }, 500);
+    }
+  }
+
+  const toolUrl = access ? `${toolBase.replace(/\/$/, '/')}?code=${encodeURIComponent(access.code)}` : toolBase;
 
   const notifySubject = formType === 'assessment'
     ? `New Assessment Request — ${fields.company}`
-    : `New Aegis Tool Download — ${fields.company || fields.name}`;
+    : `New Free Scan Request — ${fields.company || fields.name}`;
 
   const confirmSubject = formType === 'assessment'
     ? "We've got your assessment request — AISymmetric Aegis"
-    : 'Your Aegis Tool access — AISymmetric Aegis';
+    : 'Your 7-day Aegis Scan access — AISymmetric Aegis';
 
   const [notify, confirm] = await Promise.allSettled([
     sendEmail(apiKey, {
@@ -43,16 +57,16 @@ export async function onRequestPost({ request, env }) {
       to: [notifyTo],
       reply_to: fields.email,
       subject: notifySubject,
-      html: buildNotifyHtml(formType, fields),
-      text: buildNotifyText(formType, fields),
+      html: buildNotifyHtml(formType, fields, access),
+      text: buildNotifyText(formType, fields, access),
     }),
     sendEmail(apiKey, {
       from,
       to: [fields.email],
       reply_to: notifyTo,
       subject: confirmSubject,
-      html: buildConfirmHtml(formType, fields, toolUrl),
-      text: buildConfirmText(formType, fields, toolUrl),
+      html: buildConfirmHtml(formType, fields, toolUrl, access),
+      text: buildConfirmText(formType, fields, toolUrl, access),
     }),
   ]);
 
@@ -147,12 +161,16 @@ function emailShell(title, accent, bodyHtml) {
 </body></html>`;
 }
 
-function buildNotifyHtml(formType, f) {
-  const title = formType === 'assessment' ? 'New Assessment Request' : 'New Aegis Tool Download';
+function buildNotifyHtml(formType, f, access) {
+  const title = formType === 'assessment' ? 'New Assessment Request' : 'New Free Scan Request';
   const accent = formType === 'assessment' ? '#C9A84C' : '#1A9B8C';
-  const rows = formType === 'assessment'
-    ? [row('Name', f.name), row('Email', f.email), row('Company', f.company), row('Role', f.role), row('Size', f.size), row('Interest', f.interest), row('Timeline', f.timeline), row('Context', f.context), row('Source', f.source)].join('')
-    : [row('Name', f.name), row('Email', f.email), row('Company', f.company), row('Use case', f.useCase), row('Source', f.source)].join('');
+  const assessRows = [row('Name', f.name), row('Email', f.email), row('Company', f.company), row('Role', f.role), row('Size', f.size), row('Interest', f.interest), row('Timeline', f.timeline), row('Context', f.context), row('Source', f.source)];
+  const scanRows = [row('Name', f.name), row('Email', f.email), row('Company', f.company), row('Use case', f.useCase), row('Source', f.source)];
+  if (access) {
+    scanRows.push(row('Access code issued', access.code));
+    scanRows.push(row('Expires', access.expiresAt.toISOString().slice(0, 10)));
+  }
+  const rows = (formType === 'assessment' ? assessRows : scanRows).join('');
 
   const body = `<tr><td style="padding:24px 28px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
@@ -164,15 +182,19 @@ function buildNotifyHtml(formType, f) {
   return emailShell(title, accent, body);
 }
 
-function buildNotifyText(formType, f) {
-  const title = formType === 'assessment' ? 'New Assessment Request' : 'New Aegis Tool Download';
+function buildNotifyText(formType, f, access) {
+  const title = formType === 'assessment' ? 'New Assessment Request' : 'New Free Scan Request';
   const pairs = formType === 'assessment'
     ? [['Name', f.name], ['Email', f.email], ['Company', f.company], ['Role', f.role], ['Size', f.size], ['Interest', f.interest], ['Timeline', f.timeline], ['Context', f.context], ['Source', f.source]]
     : [['Name', f.name], ['Email', f.email], ['Company', f.company], ['Use case', f.useCase], ['Source', f.source]];
+  if (access) {
+    pairs.push(['Access code issued', access.code]);
+    pairs.push(['Expires', access.expiresAt.toISOString().slice(0, 10)]);
+  }
   return `${title}\n\n` + pairs.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n');
 }
 
-function buildConfirmHtml(formType, f, toolUrl) {
+function buildConfirmHtml(formType, f, toolUrl, access) {
   const hi = firstName(f.name);
   if (formType === 'assessment') {
     const title = 'Thanks — we got your request.';
@@ -195,23 +217,30 @@ function buildConfirmHtml(formType, f, toolUrl) {
     return emailShell(title, accent, body);
   }
 
-  // download
-  const title = 'Your Aegis Tool access';
+  // download / free scan
+  const title = 'Your 7-day Aegis Scan access';
   const accent = '#1A9B8C';
+  const code = access ? access.code : '';
+  const expiresLabel = access ? access.expiresAt.toUTCString() : '';
   const body = `<tr><td style="padding:28px 28px 8px;color:#0A0C10;font-size:15px;line-height:1.6;">
     <p style="margin:0 0 16px;">Hi ${escapeHtml(hi)},</p>
-    <p style="margin:0 0 20px;">Thanks for your interest in the Aegis Tool — a passive security snapshot for sites you own. It runs entirely in your browser; no install needed.</p>
+    <p style="margin:0 0 20px;">Thanks for trying the Aegis Quick Scan — a passive security snapshot for sites you own. It runs in your browser, delivers a branded HTML report in seconds, and doesn't generate any scan traffic against the target.</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-      <tr><td style="border-radius:8px;background:linear-gradient(135deg,#C9A84C,#1A9B8C);">
-        <a href="${escapeHtml(toolUrl)}" style="display:inline-block;padding:14px 28px;color:#0A0C10;font-weight:700;font-size:14px;text-decoration:none;letter-spacing:0.02em;">Launch Aegis Tool &rarr;</a>
+      <tr><td style="border-radius:10px;background:linear-gradient(135deg,#C9A84C,#1A9B8C);">
+        <a href="${escapeHtml(toolUrl)}" style="display:inline-block;padding:14px 28px;color:#0A0C10;font-weight:700;font-size:14px;text-decoration:none;letter-spacing:0.02em;">Launch Aegis Scanner &rarr;</a>
       </td></tr>
     </table>
-    <p style="margin:0 0 12px;font-weight:600;color:#0A0C10;">How to use it:</p>
+    <div style="background:#F4F2EE;border:1px dashed #D9D2C4;border-radius:10px;padding:16px 18px;margin:0 0 20px;">
+      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#8A6E30;font-weight:700;margin-bottom:6px;">Your access code</div>
+      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:17px;font-weight:700;color:#0A0C10;letter-spacing:0.04em;word-break:break-all;">${escapeHtml(code)}</div>
+      <div style="font-size:12px;color:#6B7A9A;margin-top:8px;line-height:1.5;">Clicking the button above unlocks the scanner for you automatically. If you need to paste the code in later, it's valid until <strong>${escapeHtml(expiresLabel)}</strong> (7 days).</div>
+    </div>
+    <p style="margin:0 0 12px;font-weight:600;color:#0A0C10;">A few ground rules:</p>
     <ul style="margin:0 0 16px 18px;padding:0;color:#0A0C10;">
-      <li style="margin-bottom:6px;">Run it against sites you own or have <strong>explicit authorization</strong> to assess.</li>
+      <li style="margin-bottom:6px;">Only scan sites you own or have <strong>explicit authorization</strong> to assess.</li>
       <li style="margin-bottom:6px;">Passive only — reads headers, DNS, and public resources. No fuzzing or traffic generation.</li>
-      <li style="margin-bottom:6px;">Download the branded HTML report when finished, or print it straight from the page.</li>
-      <li style="margin-bottom:0;">Questions or unexpected output? Reply to this email — we read everything.</li>
+      <li style="margin-bottom:6px;">After each scan, hit <em>Download HTML Report</em> for a printable, branded copy.</li>
+      <li style="margin-bottom:0;">Need another 7 days? Request a fresh code from the site any time.</li>
     </ul>
     <p style="margin:0;color:#6B7A9A;font-size:14px;">— The AISymmetric Aegis team</p>
   </td></tr>
@@ -221,7 +250,7 @@ function buildConfirmHtml(formType, f, toolUrl) {
   return emailShell(title, accent, body);
 }
 
-function buildConfirmText(formType, f, toolUrl) {
+function buildConfirmText(formType, f, toolUrl, access) {
   const hi = firstName(f.name);
   if (formType === 'assessment') {
     return `Hi ${hi},
@@ -238,16 +267,21 @@ In the meantime, feel free to reply to this email with anything you'd like us to
 — The AISymmetric Aegis team
 https://aisymmetricaegis.com`;
   }
+  const codeBlock = access ? `
+ACCESS CODE: ${access.code}
+VALID UNTIL: ${access.expiresAt.toUTCString()} (7 days)
+
+` : '';
   return `Hi ${hi},
 
-Thanks for your interest in the Aegis Tool — a passive security snapshot for sites you own. It runs entirely in your browser; no install needed.
+Thanks for trying the Aegis Quick Scan — a passive security snapshot for sites you own. It runs in your browser; no install needed.
 
-Launch: ${toolUrl}
-
+Launch the scanner: ${toolUrl}
+${codeBlock}
 How to use it:
- - Run it against sites you own or have explicit authorization to assess.
+ - Only scan sites you own or have explicit authorization to assess.
  - Passive only — reads headers, DNS, and public resources. No fuzzing or traffic generation.
- - Download the branded HTML report when finished, or print it straight from the page.
+ - After each scan, download the branded HTML report.
  - Questions or unexpected output? Reply to this email — we read everything.
 
 — The AISymmetric Aegis team
