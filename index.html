@@ -1168,6 +1168,47 @@
     .hero-actions { flex-direction: column; align-items: flex-start; }
     .pricing-toggle { flex-wrap: wrap; }
   }
+
+  /* ─── MODAL ─── */
+  body.modal-open { overflow: hidden; }
+  .modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .modal[hidden] { display: none; }
+  .modal-overlay { position: absolute; inset: 0; background: rgba(5,6,8,0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: modal-fade 0.2s var(--ease); }
+  .modal-box { position: relative; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; background: linear-gradient(180deg, #141722 0%, #0A0C10 100%); border: 1px solid rgba(201,168,76,0.18); border-radius: var(--radius); box-shadow: 0 40px 80px rgba(0,0,0,0.6); animation: modal-rise 0.3s var(--ease); }
+  .modal-close { position: absolute; top: 14px; right: 14px; background: transparent; border: none; color: var(--muted); font-size: 28px; line-height: 1; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; transition: all 0.2s var(--ease); display: flex; align-items: center; justify-content: center; padding: 0; }
+  .modal-close:hover { background: var(--surface-hover); color: var(--white); }
+  .modal-body { padding: 40px 36px 32px; }
+  .modal-eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--aegis-gold); font-weight: 600; margin-bottom: 12px; }
+  .modal-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: var(--white); line-height: 1.2; margin-bottom: 10px; }
+  .modal-sub { font-size: 14px; color: var(--muted-light); line-height: 1.55; margin-bottom: 24px; }
+  .modal-form { display: flex; flex-direction: column; gap: 14px; }
+  .modal-form label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; letter-spacing: 0.08em; color: var(--muted-light); font-weight: 600; text-transform: uppercase; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .modal-form input, .modal-form select, .modal-form textarea { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 11px 14px; font-family: var(--font); font-size: 14px; color: var(--off-white); transition: all 0.2s var(--ease); text-transform: none; letter-spacing: normal; font-weight: 400; width: 100%; }
+  .modal-form select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7A9A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+  .modal-form select option { background: #141722; color: var(--off-white); }
+  .modal-form textarea { resize: vertical; min-height: 80px; }
+  .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus { outline: none; border-color: var(--aegis-gold); background: rgba(255,255,255,0.06); box-shadow: 0 0 0 3px var(--aegis-gold-glow); }
+  .modal-form input::placeholder, .modal-form textarea::placeholder { color: var(--muted); }
+  .modal-form .req { color: var(--aegis-gold); margin-left: 2px; }
+  .modal-form .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .modal-submit { margin-top: 10px; background: linear-gradient(135deg, var(--aegis-gold), var(--aegis-teal)); color: var(--black-pure); border: none; border-radius: var(--radius-xs); padding: 14px 20px; font-family: var(--font); font-size: 14px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; transition: all 0.2s var(--ease); }
+  .modal-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(201,168,76,0.25); }
+  .modal-submit:disabled { opacity: 0.6; cursor: wait; }
+  .modal-status { font-size: 13px; color: var(--muted-light); min-height: 18px; text-align: center; }
+  .modal-status.error { color: #ff7b7b; }
+  .modal-success { text-align: center; padding: 20px 0 8px; }
+  .modal-success .check-circle { width: 48px; height: 48px; border-radius: 50%; background: rgba(26,155,140,0.15); border: 1px solid rgba(26,155,140,0.4); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--aegis-teal); font-size: 22px; }
+  .modal-success h4 { font-size: 20px; color: var(--white); font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .modal-success p { color: var(--muted-light); font-size: 14px; line-height: 1.6; }
+  @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modal-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 520px) {
+    .form-row { grid-template-columns: 1fr; }
+    .modal-body { padding: 32px 22px 24px; }
+    .modal-title { font-size: 20px; }
+    .modal { padding: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -1196,7 +1237,7 @@
     <li><a href="#audit-tool">Aegis Tool</a></li>
     <li><a href="#platforms">Platforms</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#contact" class="nav-cta">Request Assessment</a></li>
+    <li><a href="#" class="nav-cta" data-modal="assessment" data-modal-source="Nav bar">Request Assessment</a></li>
   </ul>
   <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
     <span></span><span></span><span></span>
@@ -1638,7 +1679,7 @@ Report: <span class="t-val">findings/report_draft.md</span>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Executive findings report</li>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Remediation guidance</li>
         </ul>
-        <a href="mailto:security@aisymmetric.com" class="pricing-card-cta">Get Started</a>
+        <a href="#" class="pricing-card-cta" data-modal="assessment" data-modal-source="Pricing — Starter">Get Started</a>
       </div>
 
       <!-- Mid-Market -->
@@ -1662,7 +1703,7 @@ Report: <span class="t-val">findings/report_draft.md</span>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>CVSS-scored findings report</li>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority remediation matrix</li>
         </ul>
-        <a href="mailto:security@aisymmetric.com" class="pricing-card-cta">Request Scoping Call</a>
+        <a href="#" class="pricing-card-cta" data-modal="assessment" data-modal-source="Pricing — Mid-Market">Request Scoping Call</a>
       </div>
 
       <!-- Premium -->
@@ -1685,7 +1726,7 @@ Report: <span class="t-val">findings/report_draft.md</span>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Executive &amp; board presentation</li>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>30-day remediation support</li>
         </ul>
-        <a href="mailto:security@aisymmetric.com" class="pricing-card-cta">Request Scoping Call</a>
+        <a href="#" class="pricing-card-cta" data-modal="assessment" data-modal-source="Pricing — Premium">Request Scoping Call</a>
       </div>
 
       <!-- vCISO -->
@@ -1708,7 +1749,7 @@ Report: <span class="t-val">findings/report_draft.md</span>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Annual penetration test included</li>
           <li><svg class="check" viewBox="0 0 14 14" fill="none"><polyline class="check-path" points="2,7 5.5,10.5 12,3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Dedicated Slack channel</li>
         </ul>
-        <a href="mailto:security@aisymmetric.com" class="pricing-card-cta">Schedule a Conversation</a>
+        <a href="#" class="pricing-card-cta" data-modal="assessment" data-modal-source="Pricing — vCISO Retainer">Schedule a Conversation</a>
       </div>
     </div>
 
@@ -1728,7 +1769,7 @@ Report: <span class="t-val">findings/report_draft.md</span>
         <div class="bundle-was">$17,000 separately</div>
         <div class="bundle-price">$9K</div>
         <div class="bundle-save">Save ~47%</div>
-        <a href="mailto:security@aisymmetric.com" class="btn-primary" style="font-size:13px;padding:12px 24px;">Claim Bundle</a>
+        <a href="#" class="btn-primary" style="font-size:13px;padding:12px 24px;" data-modal="assessment" data-modal-source="Security Foundations Bundle ($9K)">Claim Bundle</a>
       </div>
     </div>
   </div>
@@ -1744,8 +1785,8 @@ Report: <span class="t-val">findings/report_draft.md</span>
         <p class="cta-sub">Every assessment starts with scope, authorization, and a clear deliverable. No guesswork. No noise. Just findings you can act on.</p>
       </div>
       <div class="cta-actions reveal reveal-d2">
-        <a href="mailto:security@aisymmetric.com" class="btn-primary">Request an Assessment</a>
-        <a href="#" class="btn-secondary">Download Aegis Tool <span class="arrow">&rarr;</span></a>
+        <a href="#" class="btn-primary" data-modal="assessment" data-modal-source="Footer CTA">Request an Assessment</a>
+        <a href="#" class="btn-secondary" data-modal="download" data-modal-source="Footer CTA">Download Aegis Tool <span class="arrow">&rarr;</span></a>
       </div>
     </div>
   </div>
@@ -1766,6 +1807,109 @@ Report: <span class="t-val">findings/report_draft.md</span>
     </div>
   </div>
 </footer>
+
+<!-- ─── MODAL: Request Assessment ─── -->
+<div class="modal" id="modal-assessment" role="dialog" aria-modal="true" aria-labelledby="modal-assessment-title" hidden>
+  <div class="modal-overlay" data-modal-close></div>
+  <div class="modal-box">
+    <button class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    <div class="modal-body">
+      <div class="modal-eyebrow">Request Assessment</div>
+      <h3 id="modal-assessment-title" class="modal-title">Tell us about your environment</h3>
+      <p class="modal-sub">We'll respond within one business day with scoping questions or a call invite.</p>
+      <form class="modal-form" data-form-type="assessment" novalidate>
+        <div class="form-row">
+          <label>Name <span class="req">*</span>
+            <input name="name" required autocomplete="name">
+          </label>
+          <label>Email <span class="req">*</span>
+            <input name="email" type="email" required autocomplete="email">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Company <span class="req">*</span>
+            <input name="company" required autocomplete="organization">
+          </label>
+          <label>Role
+            <input name="role" autocomplete="organization-title" placeholder="CTO, IT Director…">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>Company size
+            <select name="size">
+              <option value="">Select…</option>
+              <option>1–10</option>
+              <option>11–50</option>
+              <option>51–200</option>
+              <option>201–1000</option>
+              <option>1000+</option>
+            </select>
+          </label>
+          <label>Primary interest
+            <select name="interest">
+              <option value="">Select…</option>
+              <option>Starter ($2K–$8K)</option>
+              <option>Mid-Market ($8K–$20K)</option>
+              <option>Premium ($20K–$60K)</option>
+              <option>vCISO Retainer</option>
+              <option>Security Foundations Bundle ($9K)</option>
+              <option>Not sure yet</option>
+            </select>
+          </label>
+        </div>
+        <label>Target timeline
+          <select name="timeline">
+            <option value="">Select…</option>
+            <option>ASAP (within 30 days)</option>
+            <option>Next quarter (1–3 months)</option>
+            <option>Planning ahead (3–6 months)</option>
+            <option>Just exploring</option>
+          </select>
+        </label>
+        <label>Anything we should know?
+          <textarea name="context" rows="3" placeholder="Platforms, compliance goals, current concerns…"></textarea>
+        </label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true">
+        <input type="hidden" name="source">
+        <button type="submit" class="modal-submit">Send Request</button>
+        <div class="modal-status" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MODAL: Download Aegis Tool ─── -->
+<div class="modal" id="modal-download" role="dialog" aria-modal="true" aria-labelledby="modal-download-title" hidden>
+  <div class="modal-overlay" data-modal-close></div>
+  <div class="modal-box">
+    <button class="modal-close" data-modal-close aria-label="Close">&times;</button>
+    <div class="modal-body">
+      <div class="modal-eyebrow">Aegis Tool</div>
+      <h3 id="modal-download-title" class="modal-title">Get the Aegis security toolkit</h3>
+      <p class="modal-sub">We'll email you the download link and release notes.</p>
+      <form class="modal-form" data-form-type="download" novalidate>
+        <div class="form-row">
+          <label>Name <span class="req">*</span>
+            <input name="name" required autocomplete="name">
+          </label>
+          <label>Email <span class="req">*</span>
+            <input name="email" type="email" required autocomplete="email">
+          </label>
+        </div>
+        <label>Company
+          <input name="company" autocomplete="organization">
+        </label>
+        <label>What will you use it for?
+          <textarea name="useCase" rows="3" placeholder="Internal audits, client work, research…"></textarea>
+        </label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" class="honeypot" aria-hidden="true">
+        <input type="hidden" name="source">
+        <button type="submit" class="modal-submit">Send Me the Link</button>
+        <div class="modal-status" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <script>
   // ─── NAV SCROLL ───
@@ -1836,6 +1980,100 @@ Report: <span class="t-val">findings/report_draft.md</span>
       card.style.display = show ? '' : 'none';
     });
   }
+
+  // ─── MODALS ───
+  const modals = document.querySelectorAll('.modal');
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+  function openModal(id, source) {
+    const m = document.getElementById('modal-' + id);
+    if (!m) return;
+    const sourceInput = m.querySelector('input[name="source"]');
+    if (sourceInput) sourceInput.value = source || '';
+    m.hidden = false;
+    document.body.classList.add('modal-open');
+    setTimeout(() => {
+      const first = m.querySelector('input:not([type=hidden]):not(.honeypot), select, textarea');
+      if (first) first.focus();
+    }, 60);
+  }
+  function closeModal(m) {
+    m.hidden = true;
+    document.body.classList.remove('modal-open');
+    const status = m.querySelector('.modal-status');
+    if (status) { status.textContent = ''; status.className = 'modal-status'; }
+    const success = m.querySelector('.modal-success');
+    if (success) success.remove();
+    const form = m.querySelector('form');
+    if (form) {
+      form.hidden = false;
+      form.reset();
+      const submit = form.querySelector('.modal-submit');
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = form.dataset.formType === 'download' ? 'Send Me the Link' : 'Send Request';
+      }
+    }
+  }
+  modals.forEach(m => {
+    m.querySelectorAll('[data-modal-close]').forEach(el => {
+      el.addEventListener('click', () => closeModal(m));
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') modals.forEach(m => { if (!m.hidden) closeModal(m); });
+  });
+  document.querySelectorAll('[data-modal]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal(btn.dataset.modal, btn.dataset.modalSource || btn.textContent.trim());
+    });
+  });
+  document.querySelectorAll('.modal-form').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const modal = form.closest('.modal');
+      const status = modal.querySelector('.modal-status');
+      const submit = form.querySelector('.modal-submit');
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.formType = form.dataset.formType;
+
+      if (!data.name || !data.email) {
+        status.textContent = 'Please fill in name and email.';
+        status.className = 'modal-status error';
+        return;
+      }
+
+      status.textContent = '';
+      status.className = 'modal-status';
+      submit.disabled = true;
+      submit.textContent = 'Sending…';
+
+      try {
+        const resp = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const out = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(out.error || 'Something went wrong. Please try again.');
+        form.hidden = true;
+        const msg = document.createElement('div');
+        msg.className = 'modal-success';
+        const label = form.dataset.formType === 'download'
+          ? `We'll send the download link to <strong>${escHtml(data.email)}</strong> shortly.`
+          : `We'll be in touch at <strong>${escHtml(data.email)}</strong> within one business day.`;
+        msg.innerHTML = `<div class="check-circle">&#10003;</div><h4>Thanks — we got it.</h4><p>${label}</p>`;
+        form.parentNode.insertBefore(msg, form.nextSibling);
+      } catch (err) {
+        status.textContent = err.message || 'Failed to send. Please try again.';
+        status.classList.add('error');
+        submit.disabled = false;
+        submit.textContent = form.dataset.formType === 'download' ? 'Send Me the Link' : 'Send Request';
+      }
+    });
+  });
 </script>
 </body>
 </html>
