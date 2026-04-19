@@ -1,6 +1,6 @@
 const NOTIFY_EMAIL_DEFAULT = 'tyler.perleberg@aisymmetricsolutions.com';
 const FROM_DEFAULT = 'Aegis Website <onboarding@resend.dev>';
-const TOOL_URL_DEFAULT = 'https://aisymmetricaegis.com/aegis-tool';
+const TOOL_URL_DEFAULT = 'https://aisymmetricaegis.com/scan/';
 
 export async function onRequestPost({ request, env }) {
   let data;
@@ -35,7 +35,7 @@ export async function onRequestPost({ request, env }) {
 
   const confirmSubject = formType === 'assessment'
     ? "We've got your assessment request — AISymmetric Aegis"
-    : 'Your Aegis Tool download — AISymmetric Aegis';
+    : 'Your Aegis Tool access — AISymmetric Aegis';
 
   const [notify, confirm] = await Promise.allSettled([
     sendEmail(apiKey, {
@@ -196,21 +196,22 @@ function buildConfirmHtml(formType, f, toolUrl) {
   }
 
   // download
-  const title = 'Your Aegis Tool download';
+  const title = 'Your Aegis Tool access';
   const accent = '#1A9B8C';
   const body = `<tr><td style="padding:28px 28px 8px;color:#0A0C10;font-size:15px;line-height:1.6;">
     <p style="margin:0 0 16px;">Hi ${escapeHtml(hi)},</p>
-    <p style="margin:0 0 20px;">Thanks for your interest in the Aegis Tool — our AI-augmented reconnaissance and audit toolkit for authorized security assessments.</p>
+    <p style="margin:0 0 20px;">Thanks for your interest in the Aegis Tool — a passive security snapshot for sites you own. It runs entirely in your browser; no install needed.</p>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
       <tr><td style="border-radius:8px;background:linear-gradient(135deg,#C9A84C,#1A9B8C);">
-        <a href="${escapeHtml(toolUrl)}" style="display:inline-block;padding:14px 28px;color:#0A0C10;font-weight:700;font-size:14px;text-decoration:none;letter-spacing:0.02em;">Download Aegis Tool &rarr;</a>
+        <a href="${escapeHtml(toolUrl)}" style="display:inline-block;padding:14px 28px;color:#0A0C10;font-weight:700;font-size:14px;text-decoration:none;letter-spacing:0.02em;">Launch Aegis Tool &rarr;</a>
       </td></tr>
     </table>
-    <p style="margin:0 0 12px;font-weight:600;color:#0A0C10;">Before you run it:</p>
+    <p style="margin:0 0 12px;font-weight:600;color:#0A0C10;">How to use it:</p>
     <ul style="margin:0 0 16px 18px;padding:0;color:#0A0C10;">
-      <li style="margin-bottom:6px;">Only scan systems you have <strong>explicit written authorization</strong> to test.</li>
-      <li style="margin-bottom:6px;">Start with passive modules; active scans are opt-in per module.</li>
-      <li style="margin-bottom:0;">Questions or weird output? Reply to this email — we read everything.</li>
+      <li style="margin-bottom:6px;">Run it against sites you own or have <strong>explicit authorization</strong> to assess.</li>
+      <li style="margin-bottom:6px;">Passive only — reads headers, DNS, and public resources. No fuzzing or traffic generation.</li>
+      <li style="margin-bottom:6px;">Download the branded HTML report when finished, or print it straight from the page.</li>
+      <li style="margin-bottom:0;">Questions or unexpected output? Reply to this email — we read everything.</li>
     </ul>
     <p style="margin:0;color:#6B7A9A;font-size:14px;">— The AISymmetric Aegis team</p>
   </td></tr>
@@ -239,14 +240,15 @@ https://aisymmetricaegis.com`;
   }
   return `Hi ${hi},
 
-Thanks for your interest in the Aegis Tool — our AI-augmented reconnaissance and audit toolkit for authorized security assessments.
+Thanks for your interest in the Aegis Tool — a passive security snapshot for sites you own. It runs entirely in your browser; no install needed.
 
-Download: ${toolUrl}
+Launch: ${toolUrl}
 
-Before you run it:
- - Only scan systems you have explicit written authorization to test.
- - Start with passive modules; active scans are opt-in per module.
- - Questions or weird output? Reply to this email — we read everything.
+How to use it:
+ - Run it against sites you own or have explicit authorization to assess.
+ - Passive only — reads headers, DNS, and public resources. No fuzzing or traffic generation.
+ - Download the branded HTML report when finished, or print it straight from the page.
+ - Questions or unexpected output? Reply to this email — we read everything.
 
 — The AISymmetric Aegis team
 https://aisymmetricaegis.com`;

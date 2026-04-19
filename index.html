@@ -200,28 +200,6 @@
     box-shadow: 0 8px 30px rgba(201,168,76,0.3);
     transform: translateY(-1px);
   }
-  .nav-quickscan {
-    color: var(--aegis-gold) !important;
-    font-weight: 600 !important;
-    position: relative;
-  }
-  .nav-quickscan::before {
-    content: "";
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--aegis-teal);
-    margin-right: 6px;
-    vertical-align: middle;
-    box-shadow: 0 0 8px rgba(26,155,140,0.7);
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-  .nav-quickscan:hover { color: var(--white) !important; }
 
   /* ─── MOBILE NAV ─── */
   .nav-toggle {
@@ -1093,24 +1071,6 @@
     gap: 12px;
     align-items: flex-end;
   }
-  .quick-scan-link {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted-light);
-    text-decoration: none;
-    margin-top: 6px;
-    letter-spacing: 0.01em;
-    transition: color 0.2s var(--ease);
-  }
-  .quick-scan-link span {
-    background: linear-gradient(135deg, var(--aegis-gold), var(--aegis-teal));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    font-weight: 700;
-  }
-  .quick-scan-link:hover { color: var(--white); }
-
   /* ─── FOOTER ─── */
   footer {
     padding: 40px 0;
@@ -1276,7 +1236,6 @@
     <li><a href="#audit-tool">Aegis Tool</a></li>
     <li><a href="#platforms">Platforms</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="/scan/" class="nav-quickscan">Quick Scan</a></li>
     <li><a href="#" class="nav-cta" data-modal="assessment" data-modal-source="Nav bar">Request Assessment</a></li>
   </ul>
   <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
@@ -1827,7 +1786,6 @@ Report: <span class="t-val">findings/report_draft.md</span>
       <div class="cta-actions reveal reveal-d2">
         <a href="#" class="btn-primary" data-modal="assessment" data-modal-source="Footer CTA">Request an Assessment</a>
         <a href="#" class="btn-secondary" data-modal="download" data-modal-source="Footer CTA">Download Aegis Tool <span class="arrow">&rarr;</span></a>
-        <a href="/scan/" class="quick-scan-link">Or run a free <span>Quick Scan</span> of your site &rarr;</a>
       </div>
     </div>
   </div>
@@ -1844,7 +1802,7 @@ Report: <span class="t-val">findings/report_draft.md</span>
       <span>Minnesota, USA</span>
     </div>
     <div class="footer-right">
-      &copy; 2025 AISymmetric LLC &mdash; <a href="#">aisymmetric.com</a>
+      &copy; 2026 AISymmetric LLC &mdash; <a href="https://aisymmetricsolutions.com">aisymmetricsolutions.com</a>
     </div>
   </div>
 </footer>
