@@ -1182,9 +1182,9 @@
   .modal-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: var(--white); line-height: 1.2; margin-bottom: 10px; }
   .modal-sub { font-size: 14px; color: var(--muted-light); line-height: 1.55; margin-bottom: 24px; }
   .modal-form { display: flex; flex-direction: column; gap: 14px; }
-  .modal-form label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; letter-spacing: 0.08em; color: var(--muted-light); font-weight: 600; text-transform: uppercase; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .modal-form input, .modal-form select, .modal-form textarea { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 11px 14px; font-family: var(--font); font-size: 14px; color: var(--off-white); transition: all 0.2s var(--ease); text-transform: none; letter-spacing: normal; font-weight: 400; width: 100%; }
+  .modal-form label { display: block; font-size: 11px; letter-spacing: 0.08em; color: var(--muted-light); font-weight: 600; text-transform: uppercase; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
+  .modal-form input, .modal-form select, .modal-form textarea { display: block; margin-top: 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 11px 14px; font-family: var(--font); font-size: 14px; color: var(--off-white); transition: all 0.2s var(--ease); text-transform: none; letter-spacing: normal; font-weight: 400; width: 100%; }
   .modal-form select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7A9A' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
   .modal-form select option { background: #141722; color: var(--off-white); }
   .modal-form textarea { resize: vertical; min-height: 80px; }
